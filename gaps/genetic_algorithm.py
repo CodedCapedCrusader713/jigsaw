@@ -6,9 +6,9 @@ from gaps import utils
 from gaps.crossover import Crossover
 from gaps.image_analysis import ImageAnalysis
 from gaps.individual import Individual
-from gaps.plot import Plot
 from gaps.progress_bar import print_progress
 from gaps.selection import roulette_selection
+from gaps.progress_plot import ProgressPlot  # ✅ Use new plotting module
 
 
 class GeneticAlgorithm(object):
@@ -26,10 +26,12 @@ class GeneticAlgorithm(object):
         self._pieces = pieces
 
     def start_evolution(self, verbose):
-        print("=== Pieces:      {}\n".format(len(self._pieces)))
+        print(f">>> start_evolution() called with verbose = {verbose}")
 
         if verbose:
-            plot = Plot(self._image)
+            plot = ProgressPlot()
+
+        print("=== Pieces:      {}\n".format(len(self._pieces)))
 
         ImageAnalysis.analyze_image(self._pieces)
 
@@ -64,6 +66,7 @@ class GeneticAlgorithm(object):
                 termination_counter += 1
             else:
                 best_fitness_score = fittest.fitness
+                termination_counter = 0
 
             if termination_counter == self.TERMINATION_THRESHOLD:
                 print("\n\n=== GA terminated")
@@ -72,22 +75,21 @@ class GeneticAlgorithm(object):
                         self.TERMINATION_THRESHOLD
                     )
                 )
+                if verbose:
+                    plot.finish()
                 return fittest
 
             self._population = new_population
 
             if verbose:
-                plot.show_fittest(
-                    fittest.to_image(),
-                    "Generation: {} / {}".format(generation + 1, self._generations),
-                )
+                plot.show(fittest.to_image(), f"Generation {generation + 1}")
 
+        if verbose:
+            plot.finish()
         return fittest
 
     def _get_elite_individuals(self, elites):
-        """Returns first 'elite_count' fittest individuals from population"""
         return sorted(self._population, key=attrgetter("fitness"))[-elites:]
 
     def _best_individual(self):
-        """Returns the fittest individual from population"""
         return max(self._population, key=attrgetter("fitness"))
