@@ -1,5 +1,4 @@
 from __future__ import print_function
-
 from operator import attrgetter
 
 from gaps import utils
@@ -8,17 +7,19 @@ from gaps.image_analysis import ImageAnalysis
 from gaps.individual import Individual
 from gaps.progress_bar import print_progress
 from gaps.selection import roulette_selection
-from gaps.progress_plot import ProgressPlot  # ✅ Use new plotting module
+from gaps.progress_plot import ProgressPlot
+from gaps.mutate import mutate  # ✅ Mutation module
 
 
 class GeneticAlgorithm(object):
     TERMINATION_THRESHOLD = 10
 
-    def __init__(self, image, piece_size, population_size, generations, elite_size=2):
+    def __init__(self, image, piece_size, population_size, generations, elite_size=2, mutation_rate=0.01):
         self._image = image
         self._piece_size = piece_size
         self._generations = generations
         self._elite_size = elite_size
+        self._mutation_rate = mutation_rate  # ✅ Store mutation rate
         pieces, rows, columns = utils.flatten_image(image, piece_size, indexed=True)
         self._population = [
             Individual(pieces, rows, columns) for _ in range(population_size)
@@ -27,7 +28,6 @@ class GeneticAlgorithm(object):
 
     def start_evolution(self, verbose):
         print(f">>> start_evolution() called with verbose = {verbose}")
-
         if verbose:
             plot = ProgressPlot()
 
@@ -58,6 +58,10 @@ class GeneticAlgorithm(object):
                 crossover = Crossover(first_parent, second_parent)
                 crossover.run()
                 child = crossover.child()
+
+                # ✅ Apply mutation here
+                child = mutate(child, self._mutation_rate)
+
                 new_population.append(child)
 
             fittest = self._best_individual()

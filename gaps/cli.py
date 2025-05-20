@@ -8,6 +8,7 @@ from gaps.size_detector import SizeDetector
 
 DEFAULT_GENERATIONS = 20
 DEFAULT_POPULATION = 200
+DEFAULT_MUTATION_RATE = 0.01  # ✅ Default mutation rate
 
 MIN_PIECE_SIZE = 32
 MAX_PIECE_SIZE = 128
@@ -43,8 +44,9 @@ def _validate_positive_integer(_context, _param, value):
 @click.option("-s", "--size", type=int, help="Size of single square puzzle piece in pixels. Autodetected if not specified.")
 @click.option("-g", "--generations", type=int, show_default=True, default=DEFAULT_GENERATIONS, callback=_validate_positive_integer, help="The number of generations for genetic algorithm.")
 @click.option("-p", "--population", type=int, show_default=True, default=DEFAULT_POPULATION, callback=_validate_positive_integer, help="The size of the initial population for genetic algorithm.")
+@click.option("-m", "--mutation-rate", type=float, show_default=True, default=DEFAULT_MUTATION_RATE, help="Mutation rate for GA (probability of random piece swap).")
 @click.option("-d", "--debug", is_flag=True, default=False, help="If enabled, shows the best individual after each generation.")
-def run(puzzle, solution, size, generations, population, debug):
+def run(puzzle, solution, size, generations, population, mutation_rate, debug):
     """Run puzzle solver."""
     input_puzzle = cv.imread(puzzle)
 
@@ -55,14 +57,16 @@ def run(puzzle, solution, size, generations, population, debug):
     click.echo(f"Population: {population}")
     click.echo(f"Generations: {generations}")
     click.echo(f"Piece size: {size}")
+    click.echo(f"Mutation rate: {mutation_rate}")
 
     ga = GeneticAlgorithm(
         image=input_puzzle,
         piece_size=size,
         population_size=population,
         generations=generations,
+        mutation_rate=mutation_rate,  # ✅ Pass mutation rate
     )
-    result = ga.start_evolution(debug)  # ✅ Pass debug here
+    result = ga.start_evolution(debug)
     output_image = result.to_image()
 
     cv.imwrite(solution, output_image)
